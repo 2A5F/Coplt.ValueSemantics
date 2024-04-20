@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.ValueSemantics", "Coplt.ValueSemantics\Coplt.ValueSemantics.csproj", "{B6B5F461-9BCF-4420-8103-C004D57E6A53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.ValueSemantics.Analyzers", "Coplt.ValueSemantics.Analyzers\Coplt.ValueSemantics.Analyzers\Coplt.ValueSemantics.Analyzers.csproj", "{D52AAF66-9296-4511-8217-3630151A14F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.ValueSemantics.Analyzers.Sample", "Coplt.ValueSemantics.Analyzers\Coplt.ValueSemantics.Analyzers.Sample\Coplt.ValueSemantics.Analyzers.Sample.csproj", "{FDAF6A1B-F1ED-417B-9DFA-0DE262D2B293}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B6B5F461-9BCF-4420-8103-C004D57E6A53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6B5F461-9BCF-4420-8103-C004D57E6A53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6B5F461-9BCF-4420-8103-C004D57E6A53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6B5F461-9BCF-4420-8103-C004D57E6A53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D52AAF66-9296-4511-8217-3630151A14F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D52AAF66-9296-4511-8217-3630151A14F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D52AAF66-9296-4511-8217-3630151A14F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D52AAF66-9296-4511-8217-3630151A14F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDAF6A1B-F1ED-417B-9DFA-0DE262D2B293}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDAF6A1B-F1ED-417B-9DFA-0DE262D2B293}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDAF6A1B-F1ED-417B-9DFA-0DE262D2B293}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDAF6A1B-F1ED-417B-9DFA-0DE262D2B293}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
