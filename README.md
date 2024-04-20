@@ -1,5 +1,8 @@
 # Coplt.ValueSemantics
 
+![MIT](https://img.shields.io/github/license/2A5F/Coplt.ValueSemantics)
+[![Nuget](https://img.shields.io/nuget/v/Coplt.ValueSemantics)](https://www.nuget.org/packages/Coplt.ValueSemantics/)
+
 Value semantic extension
 
 - Value type inheritance
