@@ -1,9 +1,7 @@
 ﻿// using System;
-// using System.Collections.Generic;
-// using System.Diagnostics.CodeAnalysis;
-// using System.Runtime.CompilerServices;
 //
-// namespace Coplt.ValueSemantics.Analyzers.Sample.Test1;
+// namespace Coplt.ValueSemantics.Analyzers.Sample.Test2;
+//
 //
 // public enum FooEnum
 // {
@@ -11,7 +9,7 @@
 //     B,
 // }
 //
-// public record struct Foo<T>()
+// public record Foo<T>()
 // {
 //     /// <summary>
 //     /// Field1
@@ -28,7 +26,7 @@
 //     /// </summary>
 //     public readonly int Field3 = 0;
 //
-//     public readonly ref readonly int Prop1 => throw new NotImplementedException();
+//     public ref readonly int Prop1 => throw new NotImplementedException();
 //
 //     public int this[int a]
 //     {
@@ -36,7 +34,7 @@
 //         set => throw new NotImplementedException();
 //     }
 //
-//     public readonly object? Some(FooEnum a = FooEnum.A) => throw new NotImplementedException();
+//     public object? Some(FooEnum a = FooEnum.A) => throw new NotImplementedException();
 //
 //     /// <summary>
 //     /// Add
@@ -45,7 +43,7 @@
 // }
 //
 // [ValueInherit]
-// public partial record struct Bar<T>()
+// public partial record Bar<T>()
 // {
 //     [ValueBase] private Foo<T> _base = new();
 // }

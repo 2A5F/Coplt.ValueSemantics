@@ -20,9 +20,7 @@ public class ValueInheritGenerator : IIncrementalGenerator
     {
         var sources = context.SyntaxProvider.ForAttributeWithMetadataName(
                 "Coplt.ValueSemantics.ValueInheritAttribute",
-                (syntax, _) => syntax is StructDeclarationSyntax
-                               || (syntax is RecordDeclarationSyntax rds &&
-                                   rds.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword)),
+                (syntax, _) => syntax is StructDeclarationSyntax or ClassDeclarationSyntax or RecordDeclarationSyntax,
                 static (ctx, _) =>
                 {
                     var diagnostics = new List<Diagnostic>();
@@ -34,23 +32,36 @@ public class ValueInheritGenerator : IIncrementalGenerator
                     var nameWraps = symbol.WrapNames();
                     var nameWrap = symbol.WrapName();
 
+                    var parseOptions = (CSharpParseOptions)ctx.SemanticModel.SyntaxTree.Options;
+                    var langVersion = parseOptions.LanguageVersion.GetLangVersion();
+
+                    var isStruct = syntax is StructDeclarationSyntax
+                                   || (syntax is RecordDeclarationSyntax rds &&
+                                       rds.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword));
+
                     var theBase = symbol.GetMembers()
-                        .Select(s =>
+                        .Select<ISymbol, (ISymbol? s, ValueInheritBase b, ITypeSymbol t)?>(s =>
                         {
                             if (s is IFieldSymbol fs)
                             {
                                 if (!fs.GetAttributes().Any(a =>
                                         a.AttributeClass?.ToDisplayString() ==
                                         "Coplt.ValueSemantics.ValueBaseAttribute"))
-                                    return ((ValueInheritBase, ITypeSymbol)?)null;
-                                return (new ValueInheritBase(fs.Type.ToDisplayString(), fs.Name), fs.Type);
+                                    return null;
+                                return (fs,
+                                    new ValueInheritBase(fs.Type.ToDisplayString(), fs.Name, true,
+                                        RefKind.None, fs.Type.IsValueType),
+                                    fs.Type);
                             }
                             else if (s is IPropertySymbol ps)
                             {
                                 if (!ps.GetAttributes().Any(a =>
                                         a.AttributeClass?.ToDisplayString() ==
                                         "Coplt.ValueSemantics.ValueBaseAttribute")) return null;
-                                return (new ValueInheritBase(ps.Type.ToDisplayString(), ps.Name), ps.Type);
+                                return (ps,
+                                    new ValueInheritBase(ps.Type.ToDisplayString(), ps.Name,
+                                        ps.GetMethod?.IsReadOnly ?? ps.SetMethod?.IsReadOnly ?? false, RefKind.None,
+                                        ps.Type.IsValueType), ps.Type);
                             }
                             return null;
                         })
@@ -63,12 +74,22 @@ public class ValueInheritGenerator : IIncrementalGenerator
                             attr.ApplicationSyntaxReference?.GetSyntax().GetLocation() ??
                             syntax.Identifier.GetLocation()));
 
-                        theBase = new(new("void", "_base"),
+                        theBase = new(null, new("void", "_base", false, RefKind.None, false),
                             semanticModel.Compilation.GetSpecialType(SpecialType.System_Void));
                     }
 
-                    var inheritBase = theBase.Value.Item1;
-                    var inheritBaseType = theBase.Value.Item2;
+                    var theBaseValue = theBase.Value;
+
+                    var inheritBase = theBaseValue.b;
+                    var inheritBaseType = theBaseValue.t;
+
+                    inheritBase.RefKind = (isStruct, langVersion, theBase.Value.s) switch
+                    {
+                        (_, _, IPropertySymbol ps) => ps.RefKind,
+                        ((false, _, _) or (true, >= 1100, _)) and (_, _, IFieldSymbol fs)
+                            => fs.IsRequired ? RefKind.Ref : RefKind.RefReadOnly,
+                        _ => RefKind.None,
+                    };
 
                     var named = attr.NamedArguments
                         .ToDictionary(a => a.Key, a => a.Value);
@@ -234,6 +255,7 @@ public class ValueInheritGenerator : IIncrementalGenerator
 
                     return (
                         syntax, rawFullName, nameWraps, nameWrap,
+                        langVersion, isStruct,
                         inheritBase, fields, properties, methods,
                         diagnostics: AlwaysEq.Create(diagnostics)
                     );
@@ -242,6 +264,7 @@ public class ValueInheritGenerator : IIncrementalGenerator
             .Select(static (input, _) =>
             {
                 var (syntax, rawFullName, nameWraps, nameWrap,
+                    langVersion, isStruct,
                     inheritBase, fields, properties, methods,
                     diagnostics) = input;
 
@@ -253,14 +276,18 @@ public class ValueInheritGenerator : IIncrementalGenerator
                 var name = syntax.Identifier.ToString();
 
                 return (
-                    genBase, name, inheritBase, fields, properties, methods,
+                    genBase, name,
+                    langVersion, isStruct,
+                    inheritBase, fields, properties, methods,
                     diagnostics
                 );
             });
 
         context.RegisterSourceOutput(sources, static (ctx, input) =>
         {
-            var (genBase, name, inheritBase, fields, properties, methods,
+            var (genBase, name,
+                langVersion, isStruct,
+                inheritBase, fields, properties, methods,
                 diagnostics) = input;
 
             if (diagnostics.Value.Count > 0)
@@ -272,7 +299,9 @@ public class ValueInheritGenerator : IIncrementalGenerator
             }
 
             var code = new ValueInheritTemplate(
-                genBase, name, inheritBase, fields, properties, methods
+                genBase, name,
+                langVersion, isStruct,
+                inheritBase, fields, properties, methods
             ).Gen();
             var sourceText = SourceText.From(code, Encoding.UTF8);
             var rawSourceFileName = genBase.FileFullName;

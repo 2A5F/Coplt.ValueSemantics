@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Coplt.ValueSemantics.Analyzers.Utilities;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Coplt.ValueSemantics.Analysis.Utilities;
@@ -165,5 +166,17 @@ internal static class Utils
             return true;
         }
         return true;
+    }
+
+    private static int MaxLangVersion { get; } = Convert.ToInt32(
+        ((LanguageVersion[])Enum.GetValues(typeof(LanguageVersion)))
+        .Where(a => a < LanguageVersion.LatestMajor)
+        .Max());
+
+    public static int GetLangVersion(this LanguageVersion v)
+    {
+        var iv = Convert.ToInt32(v);
+        if (iv == 0 || iv > MaxLangVersion) return MaxLangVersion;
+        return iv;
     }
 }

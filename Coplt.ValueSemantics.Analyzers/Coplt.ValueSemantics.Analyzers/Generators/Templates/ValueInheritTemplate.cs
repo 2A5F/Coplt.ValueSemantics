@@ -8,7 +8,10 @@ namespace Coplt.ValueSemantics.Analysis.Generators.Templates;
 
 public record struct ValueInheritBase(
     string Type,
-    string Name
+    string Name,
+    bool CanReadonly,
+    RefKind RefKind,
+    bool IsStruct
 );
 
 public record struct ValueInheritField(
@@ -66,6 +69,8 @@ public record struct ValueInheritTypeArgs(
 public class ValueInheritTemplate(
     GenBase GenBase,
     string Name,
+    int LangVersion,
+    bool IsStruct,
     ValueInheritBase Base,
     ImmutableArray<ValueInheritField> Fields,
     ImmutableArray<ValueInheritProperty> Properties,
@@ -89,19 +94,22 @@ public class ValueInheritTemplate(
             foreach (var field in Fields)
             {
                 var sta = field.Static ? " static" : "";
-                var ro = field.ReadOnly ? " readonly" : "";
+                var sro = field.ReadOnly && IsStruct && Base.CanReadonly ? " readonly" : "";
+                var ro = field.ReadOnly || Base.RefKind is RefKind.RefReadOnly ? " readonly" : "";
+                var r_rev = Base.RefKind is not RefKind.None ? $" ref{ro}" : "";
+                var v_rev = Base.RefKind is not RefKind.None ? $"ref " : "";
                 var acc = field.Accessibility is Accessibility.Internal ? "internal" : "public";
                 var src = field.Static ? Base.Type : Base.Name;
 
                 sb.AppendLine();
                 sb.AppendLine($"    /// <inheritdoc cref=\"{Base.Type.ToDocType()}.{field.Name}\"/>");
                 sb.AppendLine($"    {Forward}");
-                if (!field.Static)
+                if (!field.Static && IsStruct && Base.IsStruct)
                     sb.AppendLine($"    {UnscopedRef}");
-                sb.AppendLine($"    {acc}{sta}{ro} ref{ro} {field.Type} {field.Name}");
+                sb.AppendLine($"    {acc}{sta}{sro}{r_rev} {field.Type} {field.Name}");
                 sb.AppendLine($"    {{");
                 sb.AppendLine($"        {AggressiveInlining}");
-                sb.AppendLine($"        get => ref {src}.{field.Name};");
+                sb.AppendLine($"        get => {v_rev}{src}.{field.Name};");
                 sb.AppendLine($"    }}");
             }
 
@@ -121,7 +129,7 @@ public class ValueInheritTemplate(
             foreach (var property in Properties)
             {
                 var sta = property.Static ? " static" : "";
-                var ro = property.ReadOnly ? " readonly" : "";
+                var sro = property.ReadOnly && IsStruct && Base.CanReadonly ? " readonly" : "";
                 var acc = property.Accessibility is Accessibility.Internal ? "internal" : "public";
                 var src = property.Static ? Base.Type : Base.Name;
                 var ret_ref = property.Ref is not RefKind.None ? $"{property.Ref.ToCodeString(ret_val: true)} " : "";
@@ -150,19 +158,19 @@ public class ValueInheritTemplate(
                 #endregion
 
                 sb.AppendLine($"    {Forward}");
-                if (!property.Static)
+                if (!property.Static && IsStruct && Base.IsStruct)
                     sb.AppendLine($"    {UnscopedRef}");
 
                 if (!property.Index)
                 {
-                    sb.AppendLine($"    {acc}{sta}{ro} {ret_ref}{property.Type} {property.Name}");
+                    sb.AppendLine($"    {acc}{sta}{sro} {ret_ref}{property.Type} {property.Name}");
                     sb.AppendLine($"    {{");
                     if (property.Get)
                     {
                         sb.AppendLine($"        {AggressiveInlining}");
                         sb.AppendLine($"        get => {rv_ref}{src}.{property.Name};");
                     }
-                    if (property.Set)
+                    if (property.Set && (Base.IsStruct, Base.RefKind) is not (true, RefKind.None))
                     {
                         sb.AppendLine($"        {AggressiveInlining}");
                         sb.AppendLine($"        set => {src}.{property.Name} = value;");
@@ -171,7 +179,7 @@ public class ValueInheritTemplate(
                 }
                 else
                 {
-                    sb.Append($"    {acc}{sta}{ro} {ret_ref}{property.Type} this[");
+                    sb.Append($"    {acc}{sta}{sro} {ret_ref}{property.Type} this[");
                     GenDeclArgs(property.Args);
                     sb.AppendLine($"]");
                     sb.AppendLine($"    {{");
@@ -182,7 +190,7 @@ public class ValueInheritTemplate(
                         GenCallArgs(property.Args);
                         sb.AppendLine($"];");
                     }
-                    if (property.Set)
+                    if (property.Set && (Base.IsStruct, Base.RefKind) is not (true, RefKind.None))
                     {
                         sb.AppendLine($"        {AggressiveInlining}");
                         sb.Append($"        set => {src}[");
@@ -213,7 +221,7 @@ public class ValueInheritTemplate(
                 var src = method.Static ? Base.Type : Base.Name;
                 var ret_ref = method.RetRef is not RefKind.None ? $"{method.RetRef.ToCodeString(ret_val: true)} " : "";
                 var rv_ref = method.RetRef is not RefKind.None ? $"ref " : "";
-                var ro = method.ReadOnly ? " readonly" : "";
+                var sro = method.ReadOnly && IsStruct && Base.CanReadonly ? " readonly" : "";
 
                 sb.AppendLine();
 
@@ -254,13 +262,13 @@ public class ValueInheritTemplate(
                 #endregion
 
                 sb.AppendLine($"    {Forward}");
-                if (!method.Static)
+                if (!method.Static && IsStruct && Base.IsStruct)
                     sb.AppendLine($"    {UnscopedRef}");
                 sb.AppendLine($"    {AggressiveInlining}");
 
                 #region Decl
 
-                sb.Append($"    {acc}{sta}{ro} {ret_ref}{method.RetType} {method.Name}");
+                sb.Append($"    {acc}{sta}{sro} {ret_ref}{method.RetType} {method.Name}");
 
                 #region Generics
 

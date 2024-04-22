@@ -5,11 +5,11 @@ namespace Coplt.ValueSemantics;
 /// <summary>
 /// Inheritance simulation of value types
 /// </summary>
-[AttributeUsage(AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
 public sealed class ValueInheritAttribute : Attribute
 {
     /// <summary>
-    /// Whether to generate field forwarding
+    /// Whether to generate field forwarding, ref return in struct only c# 11+
     /// </summary>
     public bool ForwardFields { get; set; } = true;
 

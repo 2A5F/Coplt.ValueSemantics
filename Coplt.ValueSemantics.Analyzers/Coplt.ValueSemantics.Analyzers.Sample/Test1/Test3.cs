@@ -3,7 +3,7 @@
 // using System.Diagnostics.CodeAnalysis;
 // using System.Runtime.CompilerServices;
 //
-// namespace Coplt.ValueSemantics.Analyzers.Sample.Test1;
+// namespace Coplt.ValueSemantics.Analyzers.Sample.Test3;
 //
 // public enum FooEnum
 // {
@@ -47,7 +47,8 @@
 // [ValueInherit]
 // public partial record struct Bar<T>()
 // {
-//     [ValueBase] private Foo<T> _base = new();
+//     [ValueBase]
+//     private Foo<T> _base { get; set; } = new();
 // }
 //
 // public static class Test
