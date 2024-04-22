@@ -168,7 +168,11 @@ public class ValueInheritGenerator : IIncrementalGenerator
                                     })
                                     .ToImmutableArray();
                                 return new ValueInheritProperty(a.Type.ToDisplayString(), a.Name,
-                                    a.DeclaredAccessibility, a.RefKind, a.GetMethod != null, a.SetMethod != null,
+                                    a.DeclaredAccessibility, a.RefKind,
+                                    a.GetMethod is
+                                        { DeclaredAccessibility: Accessibility.Public or Accessibility.Internal },
+                                    a.SetMethod is
+                                        { DeclaredAccessibility: Accessibility.Public or Accessibility.Internal },
                                     a.GetMethod?.IsReadOnly ?? a.SetMethod?.IsReadOnly ?? false,
                                     a.IsIndexer, args, a.IsStatic);
                             })
